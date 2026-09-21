@@ -26,6 +26,25 @@ _verifier = PaymentVerifier()
 
 _FUSE_ID_EXAMPLE = "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
 
+# Minimal valid ICO: 1×1 pixel, 32-bit BGRA
+_FAVICON_ICO = (
+    b"\x00\x00\x01\x00\x01\x00"           # ICO header: reserved, type=1, count=1
+    b"\x01\x01\x00\x00\x01\x00\x20\x00"   # dir: w=1, h=1, colors=0, res=0, planes=1, bpp=32
+    b"\x30\x00\x00\x00\x16\x00\x00\x00"   # dir: imagesize=48, offset=22
+    b"\x28\x00\x00\x00"                    # BITMAPINFOHEADER: size=40
+    b"\x01\x00\x00\x00"                    # width=1
+    b"\x02\x00\x00\x00"                    # height=2 (×2 for ICO format)
+    b"\x01\x00\x20\x00"                    # planes=1, bitcount=32
+    b"\x00\x00\x00\x00"                    # compression=BI_RGB
+    b"\x00\x00\x00\x00"                    # imagesize=0
+    b"\x00\x00\x00\x00"                    # xpixelspermeter=0
+    b"\x00\x00\x00\x00"                    # ypixelspermeter=0
+    b"\x00\x00\x00\x00"                    # colorsused=0
+    b"\x00\x00\x00\x00"                    # colorsimportant=0
+    b"\x4F\x6A\x2D\xFF"                    # pixel BGRA (opaque green-grey)
+    b"\x00\x00\x00\x00"                    # AND mask
+)
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -62,7 +81,7 @@ def _get_payment_header(request: Request) -> str | None:
 
 @app.get("/favicon.ico", include_in_schema=False)
 async def favicon():
-    return Response(status_code=204)
+    return Response(content=_FAVICON_ICO, media_type="image/x-icon")
 
 
 @app.get("/.well-known/x402", include_in_schema=False)

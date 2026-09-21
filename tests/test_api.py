@@ -125,9 +125,13 @@ async def test_02_health(client):
 async def test_03_provision_no_payment(client):
     resp = await client.post("/provision")
     assert resp.status_code == 402
+    assert "payment-required" in resp.headers
     body = resp.json()
     assert body.get("x402Version") == 2
+    assert body.get("error") == "Payment required"
     assert "accepts" in body
+    assert isinstance(body["accepts"][0].get("resource"), dict)
+    assert "resource" in body
 
 
 @pytest.mark.asyncio
@@ -158,9 +162,13 @@ async def test_06_read_nonexistent_fuse(client):
 async def test_07_trip_intact_no_payment(client, intact_fuse_id):
     resp = await client.post(f"/fuse/{intact_fuse_id}/trip")
     assert resp.status_code == 402
+    assert "payment-required" in resp.headers
     body = resp.json()
     assert body.get("x402Version") == 2
+    assert body.get("error") == "Payment required"
     assert "accepts" in body
+    assert isinstance(body["accepts"][0].get("resource"), dict)
+    assert "resource" in body
 
 
 @pytest.mark.asyncio

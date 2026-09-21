@@ -3,6 +3,8 @@ External Fuse API — FastAPI service.
 Endpoints: POST /provision, GET /fuse/{id}, POST /fuse/{id}/trip, GET /health, GET /
 """
 
+import base64
+import json
 import os
 from contextlib import asynccontextmanager
 from typing import Annotated
@@ -43,7 +45,12 @@ def _payment_required(amount: str, request: Request) -> JSONResponse:
     body = _verifier.generate_payment_request(
         _WALLET_ADDRESS, amount, "External Fuse", str(request.url)
     )
-    return JSONResponse(status_code=402, content=body)
+    header_value = base64.b64encode(json.dumps(body).encode()).decode()
+    return JSONResponse(
+        status_code=402,
+        content=body,
+        headers={"PAYMENT-REQUIRED": header_value},
+    )
 
 
 def _get_payment_header(request: Request) -> str | None:

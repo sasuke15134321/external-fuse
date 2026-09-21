@@ -325,6 +325,7 @@ class PaymentVerifier:
         amount_wei = int(float(amount) * 1_000_000)
         return {
             "x402Version": 2,
+            "error": "Payment required",
             "accepts": [{
                 "scheme":            "exact",
                 "network":           _NETWORK,
@@ -333,8 +334,11 @@ class PaymentVerifier:
                 "payTo":             wallet_address,
                 "maxTimeoutSeconds": 300,
                 "extra":             {"name": "USD Coin", "version": "2"},
-                "resource":          resource_url,
-                "description":       description,
-                "mimeType":          "application/json",
-            }]
+                "resource":          {"method": "POST", "mimeType": "application/json"},
+            }],
+            "resource": {
+                "url":         resource_url,
+                "description": description,
+                "mimeType":    "application/json",
+            },
         }

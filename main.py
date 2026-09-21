@@ -119,6 +119,18 @@ async def health():
             "protocols": [{"x402": {}}],
             "price": {"amount": "0.001", "currency": "USDC", "mode": "fixed"},
         },
+        "requestBody": {
+            "required": False,
+            "content": {
+                "application/json": {
+                    "schema": {
+                        "type": "object",
+                        "properties": {},
+                        "description": "No request body required. Payment via PAYMENT-SIGNATURE header.",
+                    }
+                }
+            },
+        },
         "responses": {
             "402": {"description": "x402 payment required (0.001 USDC on Base)"},
         },

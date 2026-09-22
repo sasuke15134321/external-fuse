@@ -26,6 +26,16 @@ _verifier = PaymentVerifier()
 
 _FUSE_ID_EXAMPLE = "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
 
+# MCP: initialize at module level so session_manager is available for lifespan.
+_mcp_server = None
+_mcp_starlette_app = None
+try:
+    from mcp_server import mcp as _mcp_server
+    _mcp_starlette_app = _mcp_server.streamable_http_app()
+except Exception as _mcp_init_err:
+    import logging as _log
+    _log.getLogger(__name__).warning(f"MCP init skipped: {_mcp_init_err}")
+
 # Minimal valid ICO: 1×1 pixel, 32-bit BGRA
 _FAVICON_ICO = (
     b"\x00\x00\x01\x00\x01\x00"           # ICO header: reserved, type=1, count=1
@@ -49,7 +59,11 @@ _FAVICON_ICO = (
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await fuse_store.initialize()
-    yield
+    if _mcp_server is not None:
+        async with _mcp_server.session_manager.run():
+            yield
+    else:
+        yield
 
 
 app = FastAPI(
@@ -269,12 +283,8 @@ async def trip_fuse(
     return result
 
 
-from mcp_server import mcp as _mcp_server  # noqa: E402
-try:
-    # streamable_http_app() exposes its endpoint at /mcp internally.
+if _mcp_starlette_app is not None:
     # Mounting at "/" lets FastAPI's explicit routes take priority while
     # /mcp falls through to the Starlette sub-app's /mcp route.
-    app.mount("/", _mcp_server.streamable_http_app())
-except Exception as _mcp_err:
-    import logging
-    logging.getLogger(__name__).warning(f"MCP mount failed: {_mcp_err}")
+    # session_manager.run() is started in lifespan() above.
+    app.mount("/", _mcp_starlette_app)

@@ -271,7 +271,11 @@ async def trip_fuse(
 
 from mcp_server import mcp as _mcp_server  # noqa: E402
 try:
-    app.mount("/mcp", _mcp_server.streamable_http_app())
+    # streamable_http_app() wraps StreamableHTTPASGIApp under /mcp internally.
+    # Extract the inner ASGI handler so FastAPI's /mcp mount resolves correctly.
+    _mcp_starlette = _mcp_server.streamable_http_app()
+    _mcp_asgi = _mcp_starlette.routes[0].app  # StreamableHTTPASGIApp
+    app.mount("/mcp", _mcp_asgi)
 except Exception as _mcp_err:
     import logging
     logging.getLogger(__name__).warning(f"MCP mount failed: {_mcp_err}")

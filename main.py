@@ -129,6 +129,42 @@ async def health():
     return {"status": "ok"}
 
 
+@app.get("/.well-known/mcp/server-card.json", include_in_schema=False)
+async def mcp_server_card():
+    return {
+        "serverInfo": {"name": "external-fuse-api", "version": "1.0.0"},
+        "tools": [
+            {
+                "name": "provision",
+                "description": "Provision a new fuse in INTACT state. Requires x402 payment of 0.001 USDC.",
+                "inputSchema": {"type": "object", "properties": {}},
+            },
+            {
+                "name": "read",
+                "description": "Read the current state (INTACT or BLOWN) of a fuse by its UUID. Free, no payment required.",
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "fuse_id": {"type": "string", "description": "UUID of the fuse"},
+                    },
+                    "required": ["fuse_id"],
+                },
+            },
+            {
+                "name": "trip",
+                "description": "Trip a fuse to BLOWN state. Requires x402 payment of 0.005 USDC when fuse is INTACT. BLOWN fuse returns 200 free. Nonexistent fuse returns 404 free.",
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "fuse_id": {"type": "string", "description": "UUID of the fuse to trip"},
+                    },
+                    "required": ["fuse_id"],
+                },
+            },
+        ],
+    }
+
+
 @app.post(
     "/provision",
     summary="Provision a new fuse",
@@ -231,3 +267,11 @@ async def trip_fuse(
         raise HTTPException(status_code=404, detail="fuse not found")
 
     return result
+
+
+from mcp_server import mcp as _mcp_server  # noqa: E402
+try:
+    app.mount("/mcp", _mcp_server.streamable_http_app())
+except Exception as _mcp_err:
+    import logging
+    logging.getLogger(__name__).warning(f"MCP mount failed: {_mcp_err}")

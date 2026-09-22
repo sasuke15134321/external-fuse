@@ -9,6 +9,7 @@ PAYMENT_TOKEN = os.getenv("MCP_PAYMENT_TOKEN", "")
 
 mcp = FastMCP(
     "External Fuse API",
+    stateless_http=True,
     transport_security=TransportSecuritySettings(enable_dns_rebinding_protection=False),
 )
 

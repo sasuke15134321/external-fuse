@@ -1,4 +1,5 @@
 from mcp.server.fastmcp import FastMCP
+from mcp.server.transport_security import TransportSecuritySettings
 import json
 import os
 import httpx
@@ -6,7 +7,10 @@ import httpx
 BASE_URL = os.getenv("EXTERNAL_FUSE_URL", "https://external-fuse.onrender.com").rstrip("/")
 PAYMENT_TOKEN = os.getenv("MCP_PAYMENT_TOKEN", "")
 
-mcp = FastMCP("External Fuse API")
+mcp = FastMCP(
+    "External Fuse API",
+    transport_security=TransportSecuritySettings(enable_dns_rebinding_protection=False),
+)
 
 
 def _headers() -> dict:

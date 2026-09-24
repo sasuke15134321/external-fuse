@@ -1,0 +1,71 @@
+# External Fuse
+
+External deterministic fuse for AI-agent effects.
+
+External Fuse does not stop an agent itself. It provides an externally observable fuse state that can be used to control whether an effect is allowed to proceed.
+
+## State
+
+A fuse has one of two states:
+
+- INTACT
+- BLOWN
+
+## Base URL
+
+https://external-fuse.onrender.com
+
+## Typical flow
+
+1. POST /provision to create a new fuse and obtain its fuse_id.
+2. Use the returned fuse_id in place of {fuse_id}.
+3. GET /fuse/{fuse_id} to read the current state.
+4. POST /fuse/{fuse_id}/trip to change an INTACT fuse to BLOWN.
+
+Do not send the literal string {fuse_id}. Replace it with the UUID returned by /provision.
+
+## Endpoints
+
+### POST /provision
+
+Creates a new fuse in INTACT state.
+
+Price: 0.001 USDC via x402.
+
+No request body is required. Payment is supplied through the x402 payment header.
+
+Returns a fuse_id identifying the newly provisioned fuse.
+
+### GET /fuse/{fuse_id}
+
+Reads the current state of a fuse.
+
+Price: Free.
+
+fuse_id must be the UUID of a provisioned fuse.
+
+The state is INTACT or BLOWN.
+
+### POST /fuse/{fuse_id}/trip
+
+Trips an INTACT fuse to BLOWN.
+
+Price: 0.005 USDC via x402 when the fuse is INTACT.
+
+If the fuse is already BLOWN, the endpoint returns 200 without requiring payment.
+
+If the fuse does not exist, the endpoint returns 404 without requiring payment.
+
+## Discovery
+
+OpenAPI:
+https://external-fuse.onrender.com/openapi.json
+
+Health:
+https://external-fuse.onrender.com/health
+
+## Payment
+
+Protocol: x402
+
+Inspect the 402 response and OpenAPI payment metadata for the current payment requirements before paying.

@@ -143,6 +143,12 @@ async def health():
     return {"status": "ok"}
 
 
+@app.get("/llms.txt", include_in_schema=False)
+async def llms_txt():
+    llms_path = os.path.join(os.path.dirname(__file__), "llms.txt")
+    with open(llms_path, "r", encoding="utf-8-sig") as f:
+        return Response(content=f.read(), media_type="text/plain; charset=utf-8")
+
 @app.get("/.well-known/mcp/server-card.json", include_in_schema=False)
 async def mcp_server_card():
     return {

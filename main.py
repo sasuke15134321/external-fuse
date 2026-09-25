@@ -12,6 +12,7 @@ from typing import Annotated
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException, Path, Request
 from fastapi.responses import JSONResponse, Response
+from x402.extensions.bazaar import declare_discovery_extension, OutputConfig
 
 import fuse_store
 from payment_verifier import PaymentVerifier
@@ -79,34 +80,27 @@ def _payment_required(amount: str, request: Request) -> JSONResponse:
         _WALLET_ADDRESS, amount, "External Fuse", str(request.url)
     )
     if request.url.path == "/provision":
-        body["extensions"] = {
-            "bazaar": {
-                "info": {
-                    "input": {
-                        "type": "http",
-                        "method": "POST",
-                        "bodyType": "json",
-                        "body": {}
+        extensions = declare_discovery_extension(
+            input={},
+            body_type="json",
+            output=OutputConfig(
+                example={
+                    "fuse_id": _FUSE_ID_EXAMPLE,
+                    "state": "INTACT"
+                },
+                schema={
+                    "type": "object",
+                    "properties": {
+                        "fuse_id": {"type": "string"},
+                        "state": {"type": "string", "enum": ["INTACT"]}
                     },
-                    "output": {
-                        "type": "json",
-                        "example": {
-                            "fuse_id": _FUSE_ID_EXAMPLE,
-                            "state": "INTACT"
-                        },
-                        "schema": {
-                            "type": "object",
-                            "properties": {
-                                "fuse_id": {"type": "string"},
-                                "state": {"type": "string", "enum": ["INTACT"]}
-                            },
-                            "required": ["fuse_id", "state"],
-                            "additionalProperties": False
-                        }
-                    }
-                }
-            }
-        }
+                    "required": ["fuse_id", "state"],
+                    "additionalProperties": False
+                },
+            ),
+        )
+        extensions["bazaar"]["info"]["input"]["method"] = "POST"
+        body["extensions"] = extensions
 
     header_value = base64.b64encode(json.dumps(body).encode()).decode()
     return JSONResponse(

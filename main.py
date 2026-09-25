@@ -81,6 +81,15 @@ def _payment_required(amount: str, request: Request) -> JSONResponse:
     if request.url.path == "/provision":
         body["extensions"] = {
             "bazaar": {
+                "schema": {
+                    "type": "object",
+                    "properties": {
+                        "fuse_id": {"type": "string"},
+                        "state": {"type": "string", "enum": ["INTACT"]}
+                    },
+                    "required": ["fuse_id", "state"],
+                    "additionalProperties": False
+                },
                 "info": {
                     "input": {
                         "type": "http",

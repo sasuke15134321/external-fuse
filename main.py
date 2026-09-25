@@ -78,6 +78,27 @@ def _payment_required(amount: str, request: Request) -> JSONResponse:
     body = _verifier.generate_payment_request(
         _WALLET_ADDRESS, amount, "External Fuse", str(request.url)
     )
+    if request.url.path == "/provision":
+        body["extensions"] = {
+            "bazaar": {
+                "info": {
+                    "input": {
+                        "type": "http",
+                        "method": "POST",
+                        "bodyType": "json",
+                        "body": {}
+                    },
+                    "output": {
+                        "type": "json",
+                        "example": {
+                            "fuse_id": _FUSE_ID_EXAMPLE,
+                            "state": "INTACT"
+                        }
+                    }
+                }
+            }
+        }
+
     header_value = base64.b64encode(json.dumps(body).encode()).decode()
     return JSONResponse(
         status_code=402,
